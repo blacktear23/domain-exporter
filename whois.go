@@ -10,40 +10,42 @@ import (
 	"time"
 )
 
-func GetWhoisTimeout(domain string, timeout time.Duration) (result string, err error) {
-
-	var (
-		parts      []string
-		zone       string
-		buffer     []byte
-		connection net.Conn
-	)
-	parts = strings.Split(domain, ".")
+func GetWhoisTimeout(domain string, timeout time.Duration) (string, error) {
+	parts := strings.Split(domain, ".")
 	if len(parts) < 2 {
-		err = fmt.Errorf("Domain(%s) name is wrong!", domain)
-		return
+		err := fmt.Errorf("Domain(%s) name is wrong!", domain)
+		return "", err
 	}
 	//last part of domain is zome
-	zone = parts[len(parts)-1]
+	zone := parts[len(parts)-1]
+	defaultServer := fmt.Sprintf("whois.nic.%s", zone)
 	server, ok := servers[zone]
 	if !ok {
-		err = fmt.Errorf("No such server for zone %s. Domain %s.", zone, domain)
-		return
+		server = defaultServer
 	}
-	connection, err = net.DialTimeout("tcp", net.JoinHostPort(server, "43"), timeout)
+	ret, err := GetWhoisWithServerTimeout(domain, server, timeout)
 	if err != nil {
-		//return net.Conn error
-		return
+		return ret, err
 	}
-	defer connection.Close()
+	if ret == "" && server != defaultServer {
+		return GetWhoisWithServerTimeout(domain, defaultServer, timeout)
+	}
+	return ret, err
+}
 
-	connection.Write([]byte(domain + "\r\n"))
-	buffer, err = ioutil.ReadAll(connection)
+func GetWhoisWithServerTimeout(domain, server string, timeout time.Duration) (string, error) {
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(server, "43"), timeout)
 	if err != nil {
-		return
+		return "", err
 	}
-	result = string(buffer[:])
-	return
+	defer conn.Close()
+
+	conn.Write([]byte(domain + "\r\n"))
+	buf, err := ioutil.ReadAll(conn)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
 }
 
 type WhoisResult struct {
@@ -117,14 +119,39 @@ func (wc *WhoisChecker) decodeWhoisInfo(info string) (time.Time, int) {
 				days := int(et.Sub(time.Now()).Hours() / 24)
 				return et, days
 			}
+		} else if strings.Contains(rline, "有効期限") {
+			line := strings.TrimSpace(rline)
+			parts := strings.Split(line, "]")
+			if len(parts) == 2 {
+				dateStr := strings.TrimSpace(parts[1])
+				et := parseJPDateStr(dateStr)
+				days := int(et.Sub(time.Now()).Hours() / 24)
+				return et, days
+			}
 		}
 	}
-
+	log.Println("----Error Cannot Parse Whois Info----")
+	log.Println(info)
+	log.Println("-------------------------------------")
 	return time.Time{}, 0
 }
 
 func parseDateStr(date string) time.Time {
 	t, err := time.Parse("2006-01-02 15:04:05", date)
+	if err != nil {
+		log.Println("[Error]", err)
+		return time.Time{}
+	}
+	return t
+}
+
+func parseJPDateStr(date string) time.Time {
+	parts := strings.Split(date, "/")
+	if len(parts) != 3 {
+		return time.Time{}
+	}
+	year, month, day := parts[0], parts[1], parts[2]
+	t, err := time.Parse("2006-01-02", fmt.Sprintf("%s-%s-%s", year, month, day))
 	if err != nil {
 		log.Println("[Error]", err)
 		return time.Time{}
