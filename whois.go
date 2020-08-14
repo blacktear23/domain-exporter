@@ -72,20 +72,17 @@ func NewWhoisChecker(domains []string) *WhoisChecker {
 func (wc *WhoisChecker) Check() WhoisResults {
 	var (
 		lock sync.Mutex
-		wg   sync.WaitGroup
 		ret  WhoisResults = make(WhoisResults)
 	)
-	wg.Add(len(wc.Domains))
 	for _, item := range wc.Domains {
-		go func(domain string) {
+		func(domain string) {
 			cr := wc.CheckOneDomain(domain)
 			lock.Lock()
 			ret[domain] = cr
 			lock.Unlock()
-			wg.Done()
+			time.Sleep(1 * time.Second)
 		}(item)
 	}
-	wg.Wait()
 	return ret
 }
 
