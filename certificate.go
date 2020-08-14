@@ -50,15 +50,28 @@ func (dc *CertificatesChecker) Check() CertResults {
 }
 
 func (dc *CertificatesChecker) CheckOneDomain(domain string) CertResult {
-	ret := CertResult{
-		Domain: domain,
-		Status: "Error",
+	var (
+		ret = CertResult{
+			Domain: domain,
+			Status: "Error",
+		}
+		et  time.Time
+		err error
+	)
+
+	for i := 1; i < 4; i++ {
+		et, err = dc.GetExpireTime(domain)
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Duration(i) * time.Second)
 	}
-	et, err := dc.GetExpireTime(domain)
+
 	if err != nil {
 		ret.ErrorMsg = fmt.Sprintf("%s", err)
 		return ret
 	}
+
 	days := int(et.Sub(time.Now()).Hours() / 24)
 	log.Println("[INFO] Certificate", domain, "Expire After", days, "Days,", et)
 	ret.Status = "OK"

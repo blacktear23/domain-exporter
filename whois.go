@@ -87,11 +87,21 @@ func (wc *WhoisChecker) Check() WhoisResults {
 }
 
 func (wc *WhoisChecker) CheckOneDomain(domain string) WhoisResult {
-	ret := WhoisResult{
-		Domain: domain,
-		Status: "Error",
+	var (
+		ret = WhoisResult{
+			Domain: domain,
+			Status: "Error",
+		}
+		whois string
+		err   error
+	)
+	for i := 1; i < 4; i++ {
+		whois, err = GetWhoisTimeout(domain, 5*time.Second)
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Duration(i) * time.Second)
 	}
-	whois, err := GetWhoisTimeout(domain, 5*time.Second)
 	if err != nil {
 		ret.ErrorMsg = fmt.Sprintf("%s", err)
 		return ret
