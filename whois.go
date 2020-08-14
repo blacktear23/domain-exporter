@@ -24,10 +24,11 @@ func GetWhoisTimeout(domain string, timeout time.Duration) (string, error) {
 		server = defaultServer
 	}
 	ret, err := GetWhoisWithServerTimeout(domain, server, timeout)
-	if err != nil {
-		return ret, err
+	data := strings.TrimSpace(ret)
+	if err == nil && data != "" {
+		return ret, nil
 	}
-	if ret == "" && server != defaultServer {
+	if server != defaultServer {
 		return GetWhoisWithServerTimeout(domain, defaultServer, timeout)
 	}
 	return ret, err

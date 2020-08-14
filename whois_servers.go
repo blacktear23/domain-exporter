@@ -44,7 +44,7 @@ func init() {
 	servers["sl"] = "whois.nic.sl"
 	servers["tg"] = "whois.nic.tg"
 	servers["verisign"] = "whois.nic.verisign"
-	servers["vip"] = "whois-dub.mm-registry.com"
+	servers["vip"] = "whois.nic.vip"
 
 	servers["broadway"] = "whois-cl01.mm-registry.com"
 
