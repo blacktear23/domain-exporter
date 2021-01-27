@@ -8,3 +8,7 @@ certificate_domains:
 # Whois check domains
 whois_domains:
   - baidu.com
+
+# Resolve domains
+resolve_domains:
+  - baidu.com

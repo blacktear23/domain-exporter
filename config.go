@@ -13,6 +13,7 @@ type Config struct {
 	CollectDuration    int      `yaml:"collect_duration"`
 	CertificateDomains []string `yaml:"certificate_domains"`
 	WhoisDomains       []string `yaml:"whois_domains"`
+	ResolveDomains     []string `yaml:"resolve_domains"`
 	lock               sync.RWMutex
 }
 
@@ -22,6 +23,7 @@ func NewConfig(fname string) (*Config, error) {
 		CollectDuration:    3600,
 		CertificateDomains: []string{},
 		WhoisDomains:       []string{},
+		ResolveDomains:     []string{},
 	}
 	err := cfg.Reload()
 	return cfg, err
@@ -45,6 +47,7 @@ func (c *Config) Reload() error {
 	}
 	c.CertificateDomains = cfg.CertificateDomains
 	c.WhoisDomains = cfg.WhoisDomains
+	c.ResolveDomains = cfg.ResolveDomains
 	c.lock.Unlock()
 	return nil
 }
@@ -59,6 +62,12 @@ func (c *Config) GetWhoisDomains() []string {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	return c.WhoisDomains
+}
+
+func (c *Config) GetResolveDomains() []string {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return c.ResolveDomains
 }
 
 func (c *Config) GetDuration() time.Duration {

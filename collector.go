@@ -50,9 +50,20 @@ func (c *Collector) collectDomains() {
 	log.Println("Collect Whois Informations Finish")
 }
 
+func (c *Collector) collectResolves() {
+	log.Println("Collect Resolve Informations")
+	checker := NewResolveChecker(c.config.GetResolveDomains())
+	results := checker.Check()
+	for domain, result := range results {
+		DomainResolveStatus.With(prometheus.Labels{"domain": domain}).Set(decodeStatus(result.Status))
+		DomainResolveIPs.With(prometheus.Labels{"domain": domain}).Set(float64(len(result.IPs)))
+	}
+}
+
 func (c *Collector) CollectOnce() {
 	go c.collectCertificates()
 	go c.collectDomains()
+	go c.collectResolves()
 }
 
 func (c *Collector) Start() {

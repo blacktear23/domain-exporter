@@ -38,6 +38,22 @@ var (
 		},
 		[]string{"domain"},
 	)
+
+	DomainResolveStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "domain_resolve_status",
+			Help: "Domain resolve status, 0 means error, 1 means OK.",
+		},
+		[]string{"domain"},
+	)
+
+	DomainResolveIPs = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "domain_resolve_ips",
+			Help: "Domain resolved IP addresses",
+		},
+		[]string{"domain"},
+	)
 )
 
 func init() {
@@ -45,4 +61,6 @@ func init() {
 	registry.MustRegister(DomainCertificateExpireDays)
 	registry.MustRegister(DomainWhoisStatus)
 	registry.MustRegister(DomainWhoisExpireDays)
+	registry.MustRegister(DomainResolveStatus)
+	registry.MustRegister(DomainResolveIPs)
 }
