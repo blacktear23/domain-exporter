@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"sync"
@@ -60,6 +61,9 @@ func (rc *RequestChecker) Check() RequestResults {
 			lock.Lock()
 			ret[params.Domain] = rr
 			lock.Unlock()
+			if rr.ErrorMsg != "" {
+				log.Printf("RequestChecker Error: %s: %s%s -> %v", params.Domain, params.Host, params.Path, rr.ErrorMsg)
+			}
 			wg.Done()
 		}(item)
 	}
@@ -105,6 +109,7 @@ func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool,
 	if err != nil {
 		return false, err
 	}
+	req.Host = params.Host
 	req.Header.Add("Host", params.Host)
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -119,16 +124,8 @@ func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool,
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		buf := make([]byte, 1)
-		n, err := resp.Body.Read(buf)
-		if err != nil {
-			if n > 0 {
-				return true, err
-			}
-			return false, err
-		}
-		if n > 0 {
-			return true, nil
-		}
+		_, err := resp.Body.Read(buf)
+		return true, err
 	}
-	return false, nil
+	return false, fmt.Errorf("Status not equals to 200, %v", resp.StatusCode)
 }

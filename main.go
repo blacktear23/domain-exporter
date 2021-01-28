@@ -34,6 +34,7 @@ func main() {
 	collector := NewCollector(cfg)
 
 	log.Printf("Start Domain Checker Prometheus Exporter Version=%v", VERSION)
+	log.Printf("Collect Duration: %v", cfg.GetDuration())
 
 	// Start collector
 	go collector.Start()

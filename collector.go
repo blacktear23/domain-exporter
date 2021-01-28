@@ -58,6 +58,7 @@ func (c *Collector) collectResolves() {
 		DomainResolveStatus.With(prometheus.Labels{"domain": domain}).Set(decodeStatus(result.Status))
 		DomainResolveIPs.With(prometheus.Labels{"domain": domain}).Set(float64(len(result.IPs)))
 	}
+	log.Println("Collect Resolve Informations Finish")
 }
 
 func (c *Collector) collectRequest() {
@@ -73,6 +74,7 @@ func (c *Collector) collectRequest() {
 			},
 		).Set(decodeStatus(result.Status))
 	}
+	log.Println("Collect Request Informations Finish")
 }
 
 func (c *Collector) CollectOnce() {

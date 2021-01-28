@@ -51,7 +51,7 @@ func (c *Config) Reload() error {
 		return err
 	}
 	c.lock.Lock()
-	if cfg.CollectDuration > 60 {
+	if cfg.CollectDuration >= 60 {
 		c.CollectDuration = cfg.CollectDuration
 	}
 	c.CertificateDomains = cfg.CertificateDomains
