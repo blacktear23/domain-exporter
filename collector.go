@@ -60,10 +60,26 @@ func (c *Collector) collectResolves() {
 	}
 }
 
+func (c *Collector) collectRequest() {
+	log.Println("Collect Request Informations")
+	checker := NewRequestChecker(c.config.GetRequestDomains())
+	results := checker.Check()
+	for domain, result := range results {
+		DomainRequestStatus.With(
+			prometheus.Labels{
+				"domain": domain,
+				"host":   result.Host,
+				"path":   result.Path,
+			},
+		).Set(decodeStatus(result.Status))
+	}
+}
+
 func (c *Collector) CollectOnce() {
 	go c.collectCertificates()
 	go c.collectDomains()
 	go c.collectResolves()
+	go c.collectRequest()
 }
 
 func (c *Collector) Start() {

@@ -54,6 +54,14 @@ var (
 		},
 		[]string{"domain"},
 	)
+
+	DomainRequestStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "domain_request_status",
+			Help: "Domain request status, 0 means error, 1 means OK.",
+		},
+		[]string{"domain", "host", "path"},
+	)
 )
 
 func init() {
@@ -63,4 +71,5 @@ func init() {
 	registry.MustRegister(DomainWhoisExpireDays)
 	registry.MustRegister(DomainResolveStatus)
 	registry.MustRegister(DomainResolveIPs)
+	registry.MustRegister(DomainRequestStatus)
 }

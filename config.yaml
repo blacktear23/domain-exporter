@@ -12,3 +12,12 @@ whois_domains:
 # Resolve domains
 resolve_domains:
   - baidu.com
+
+# Request domains
+request_domains:
+  - host: www.baidu.com
+    path: /
+    https: true
+    domains:
+      - www.a.shifen.com
+      - www.baidu.com
