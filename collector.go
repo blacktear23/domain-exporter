@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -73,6 +74,17 @@ func (c *Collector) collectRequest() {
 				"path":   result.Path,
 			},
 		).Set(decodeStatus(result.Status))
+		if result.Status == "Error" {
+			DomainRequestError.With(
+				prometheus.Labels{
+					"domain":  domain,
+					"host":    result.Host,
+					"path":    result.Path,
+					"address": result.Address,
+					"status":  fmt.Sprintf("%v", result.StatusCode),
+				},
+			).Inc()
+		}
 	}
 	log.Println("Collect Request Informations Finish")
 }

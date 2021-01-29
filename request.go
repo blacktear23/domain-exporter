@@ -11,11 +11,13 @@ import (
 )
 
 type RequestResult struct {
-	Domain   string
-	Status   string
-	Host     string
-	Path     string
-	ErrorMsg string
+	Domain     string
+	Status     string
+	Host       string
+	Path       string
+	Address    string
+	StatusCode int
+	ErrorMsg   string
 }
 
 type RequestParams struct {
@@ -73,10 +75,12 @@ func (rc *RequestChecker) Check() RequestResults {
 
 func (rc *RequestChecker) CheckOneDomain(params *RequestParams) RequestResult {
 	ret := RequestResult{
-		Domain: params.Domain,
-		Status: "Error",
-		Host:   params.Host,
-		Path:   params.Path,
+		Domain:     params.Domain,
+		Status:     "Error",
+		Host:       params.Host,
+		Path:       params.Path,
+		Address:    "",
+		StatusCode: 0,
 	}
 	addrs, err := net.LookupHost(params.Domain)
 	if err != nil {
@@ -88,17 +92,19 @@ func (rc *RequestChecker) CheckOneDomain(params *RequestParams) RequestResult {
 		return ret
 	}
 	addr := addrs[0]
-	responseOk, err := rc.RequestHttp(addr, params)
+	ret.Address = addr
+	responseOk, statusCode, err := rc.RequestHttp(addr, params)
 	if err != nil {
 		ret.ErrorMsg = fmt.Sprintf("%v", err)
 	}
 	if responseOk {
 		ret.Status = "OK"
 	}
+	ret.StatusCode = statusCode
 	return ret
 }
 
-func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool, error) {
+func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool, int, error) {
 	var url string
 	if params.Https {
 		url = fmt.Sprintf("https://%s%s", addr, params.Path)
@@ -107,7 +113,7 @@ func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool,
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 	req.Host = params.Host
 	req.Header.Add("Host", params.Host)
@@ -119,13 +125,13 @@ func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool,
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		buf := make([]byte, 1)
 		_, err := resp.Body.Read(buf)
-		return true, err
+		return true, 200, err
 	}
-	return false, fmt.Errorf("Status not equals to 200, %v", resp.StatusCode)
+	return false, resp.StatusCode, fmt.Errorf("Status not equals to 200, %v", resp.StatusCode)
 }

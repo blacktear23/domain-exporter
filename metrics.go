@@ -62,6 +62,14 @@ var (
 		},
 		[]string{"domain", "host", "path"},
 	)
+
+	DomainRequestError = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "domain_request_error",
+			Help: "Domain request error Log.",
+		},
+		[]string{"domain", "host", "path", "address", "status"},
+	)
 )
 
 func init() {
@@ -72,4 +80,5 @@ func init() {
 	registry.MustRegister(DomainResolveStatus)
 	registry.MustRegister(DomainResolveIPs)
 	registry.MustRegister(DomainRequestStatus)
+	registry.MustRegister(DomainRequestError)
 }
