@@ -61,7 +61,8 @@ func (rc *RequestChecker) Check() RequestResults {
 		go func(params *RequestParams) {
 			rr := rc.CheckOneDomain(params)
 			lock.Lock()
-			ret[params.Domain] = rr
+			key := fmt.Sprintf("%s @ %s", params.Host, params.Domain)
+			ret[key] = rr
 			lock.Unlock()
 			if rr.ErrorMsg != "" {
 				log.Printf("RequestChecker Error: %s: %s%s -> %v", params.Domain, params.Host, params.Path, rr.ErrorMsg)

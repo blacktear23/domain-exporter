@@ -44,9 +44,9 @@ func (c *Collector) collectDomains() {
 	log.Println("Collect Whois Informations")
 	checker := NewWhoisChecker(c.config.GetWhoisDomains())
 	results := checker.Check()
-	for domain, result := range results {
-		DomainWhoisStatus.With(prometheus.Labels{"domain": domain}).Set(decodeStatus(result.Status))
-		DomainWhoisExpireDays.With(prometheus.Labels{"domain": domain}).Set(float64(result.ExpireDays))
+	for _, result := range results {
+		DomainWhoisStatus.With(prometheus.Labels{"domain": result.Domain}).Set(decodeStatus(result.Status))
+		DomainWhoisExpireDays.With(prometheus.Labels{"domain": result.Domain}).Set(float64(result.ExpireDays))
 	}
 	log.Println("Collect Whois Informations Finish")
 }
@@ -55,9 +55,9 @@ func (c *Collector) collectResolves() {
 	log.Println("Collect Resolve Informations")
 	checker := NewResolveChecker(c.config.GetResolveDomains())
 	results := checker.Check()
-	for domain, result := range results {
-		DomainResolveStatus.With(prometheus.Labels{"domain": domain}).Set(decodeStatus(result.Status))
-		DomainResolveIPs.With(prometheus.Labels{"domain": domain}).Set(float64(len(result.IPs)))
+	for _, result := range results {
+		DomainResolveStatus.With(prometheus.Labels{"domain": result.Domain}).Set(decodeStatus(result.Status))
+		DomainResolveIPs.With(prometheus.Labels{"domain": result.Domain}).Set(float64(len(result.IPs)))
 	}
 	log.Println("Collect Resolve Informations Finish")
 }
@@ -66,10 +66,10 @@ func (c *Collector) collectRequest() {
 	log.Println("Collect Request Informations")
 	checker := NewRequestChecker(c.config.GetRequestDomains())
 	results := checker.Check()
-	for domain, result := range results {
+	for _, result := range results {
 		DomainRequestStatus.With(
 			prometheus.Labels{
-				"domain": domain,
+				"domain": result.Domain,
 				"host":   result.Host,
 				"path":   result.Path,
 			},
@@ -77,7 +77,7 @@ func (c *Collector) collectRequest() {
 		if result.Status == "Error" {
 			DomainRequestError.With(
 				prometheus.Labels{
-					"domain":  domain,
+					"domain":  result.Domain,
 					"host":    result.Host,
 					"path":    result.Path,
 					"address": result.Address,
