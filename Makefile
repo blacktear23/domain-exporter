@@ -12,7 +12,7 @@ prepare-path:
 	@mkdir -p $(BUILD_PATH)/darwin
 
 build-linux: prepare-path
-	GOOS=linux go build $(BUILD_ARGS) -o $(BUILD_PATH)/linux/domain-exporter
+	GOARCH=amd64 GOOS=linux go build $(BUILD_ARGS) -o $(BUILD_PATH)/linux/domain-exporter
 	cp $(CURDIR)/config.yaml $(BUILD_PATH)/linux/config.yaml
 
 build-darwin: prepare-path
