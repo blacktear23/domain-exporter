@@ -61,6 +61,7 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		} else {
+			ResetAllMetrics()
 			collector.CollectOnce()
 		}
 	}, nil)

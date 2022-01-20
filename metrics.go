@@ -82,3 +82,14 @@ func init() {
 	registry.MustRegister(DomainRequestStatus)
 	registry.MustRegister(DomainRequestError)
 }
+
+func ResetAllMetrics() {
+	DomainCertificateStatus.Reset()
+	DomainCertificateExpireDays.Reset()
+	DomainWhoisStatus.Reset()
+	DomainWhoisExpireDays.Reset()
+	DomainResolveStatus.Reset()
+	DomainResolveIPs.Reset()
+	DomainRequestStatus.Reset()
+	DomainRequestError.Reset()
+}
