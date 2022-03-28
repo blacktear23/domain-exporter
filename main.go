@@ -32,6 +32,7 @@ func main() {
 		log.Fatal(err)
 	}
 	collector := NewCollector(cfg)
+	dnsProber := NewDNSProber(cfg)
 
 	log.Printf("Start Domain Checker Prometheus Exporter Version=%v", VERSION)
 	log.Printf("Collect Duration: %v", cfg.GetDuration())
@@ -39,7 +40,10 @@ func main() {
 	// Start collector
 	go collector.Start()
 
+	// Handle for metrics path
 	http.Handle(metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+
+	// Handle for / path
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, `<!DOCTYPE html>
 			<title>Domain Exporter</title>
@@ -50,6 +54,19 @@ func main() {
 			log.Printf("Error while sending a response for '/' path: %v", err)
 		}
 	})
+
+	// Handle for /probe path
+	http.HandleFunc("/probe", func(w http.ResponseWriter, r *http.Request) {
+		result, err := dnsProber.Probe()
+		if err != nil {
+			log.Printf("Error while generate response for '/probe' path: %v", err)
+		}
+		_, err = w.Write(result)
+		if err != nil {
+			log.Printf("Error while sending a response for '/probe' path: %v", err)
+		}
+	})
+
 	log.Printf("Start Web Server At: %s", listenAddr)
 	// Start Web Server
 	go func() {
