@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"log"
@@ -94,7 +95,7 @@ func (rc *RequestChecker) CheckOneDomain(params *RequestParams) RequestResult {
 	}
 	addr := addrs[0]
 	ret.Address = addr
-	responseOk, statusCode, err := rc.RequestHttp(addr, params)
+	responseOk, statusCode, err := rc.doRequest(addr, params)
 	if err != nil {
 		ret.ErrorMsg = fmt.Sprintf("%v", err)
 	}
@@ -105,6 +106,50 @@ func (rc *RequestChecker) CheckOneDomain(params *RequestParams) RequestResult {
 	return ret
 }
 
+func (rc *RequestChecker) doRequest(raddr string, params *RequestParams) (bool, int, error) {
+	var url string
+	if params.Https {
+		url = fmt.Sprintf("https://%s%s", params.Host, params.Path)
+	} else {
+		url = fmt.Sprintf("http://%s%s", params.Host, params.Path)
+	}
+	// Generate request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, 0, err
+	}
+	req.Host = params.Host
+	req.Header.Add("Host", params.Host)
+
+	// Prepare for http client
+	tp := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			dialer := net.Dialer{}
+			_, port, err := net.SplitHostPort(addr)
+			if err != nil {
+				return nil, err
+			}
+			return dialer.DialContext(ctx, network, fmt.Sprintf("%s:%s", raddr, port))
+		},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Transport: tp,
+		Timeout:   10 * time.Second,
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, 0, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		buf := make([]byte, 1)
+		_, err := resp.Body.Read(buf)
+		return true, 200, err
+	}
+	return false, resp.StatusCode, fmt.Errorf("Status not equals to 200, %v", resp.StatusCode)
+}
+
 func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool, int, error) {
 	var url string
 	if params.Https {
@@ -112,6 +157,7 @@ func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool,
 	} else {
 		url = fmt.Sprintf("http://%s%s", addr, params.Path)
 	}
+	fmt.Println(url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return false, 0, err

@@ -17,7 +17,7 @@ build-linux: prepare-path
 
 build-darwin: prepare-path
 	GOOS=darwin go build $(BUILD_ARGS) -o $(BUILD_PATH)/darwin/domain-exporter
-	cp $(CURDIR)/config.yaml $(BUILD_PATH)/darwin/config.yaml
+	# cp $(CURDIR)/config.yaml $(BUILD_PATH)/darwin/config.yaml
 
 build-darwin-only: prepare-path
 	GOOS=darwin go build $(BUILD_ARGS) -o $(BUILD_PATH)/darwin/domain-exporter
