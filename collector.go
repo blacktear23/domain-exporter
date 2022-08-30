@@ -33,9 +33,13 @@ func (c *Collector) collectCertificates() {
 	log.Println("Collect Certificates")
 	checker := NewCertificatesChecker(c.config.GetCertificateDomains())
 	results := checker.Check()
-	for domain, result := range results {
-		DomainCertificateStatus.With(prometheus.Labels{"domain": domain}).Set(decodeStatus(result.Status))
-		DomainCertificateExpireDays.With(prometheus.Labels{"domain": domain}).Set(float64(result.ExpireDays))
+	for _, result := range results {
+		DomainCertificateStatus.With(
+			prometheus.Labels{"domain": result.Domain, "cname": result.CNAME},
+		).Set(decodeStatus(result.Status))
+		DomainCertificateExpireDays.With(
+			prometheus.Labels{"domain": result.Domain, "cname": result.CNAME},
+		).Set(float64(result.ExpireDays))
 	}
 	log.Println("Collect Certificates Finish")
 }

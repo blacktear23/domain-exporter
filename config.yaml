@@ -4,6 +4,7 @@ collect_duration: 3600
 # Certificate check domains
 certificate_domains:
   - www.baidu.com
+  - ditu.baidu.com|map.n.shifen.com
 
 # Whois check domains
 whois_domains:

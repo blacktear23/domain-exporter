@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
 
 type CertResult struct {
 	Domain     string
+	CNAME      string
 	Status     string
 	ErrorMsg   string
 	ExpireAt   time.Time
@@ -55,12 +57,26 @@ func (dc *CertificatesChecker) CheckOneDomain(domain string) CertResult {
 			Domain: domain,
 			Status: "Error",
 		}
-		et  time.Time
-		err error
+		et    time.Time
+		err   error
+		dom   string
+		cname string
 	)
+	dparts := strings.Split(domain, "|")
+	if len(dparts) == 2 {
+		ret.Domain = dparts[0]
+		ret.CNAME = dparts[1]
+		dom = dparts[0]
+		cname = dparts[1]
+	} else {
+		ret.Domain = domain
+		ret.CNAME = domain
+		dom = domain
+		cname = domain
+	}
 
 	for i := 1; i < 4; i++ {
-		et, err = dc.GetExpireTime(domain)
+		et, err = dc.GetExpireTime(dom, cname)
 		if err == nil {
 			break
 		}
@@ -73,17 +89,20 @@ func (dc *CertificatesChecker) CheckOneDomain(domain string) CertResult {
 	}
 
 	days := int(et.Sub(time.Now()).Hours() / 24)
-	log.Println("[INFO] Certificate", domain, "Expire After", days, "Days,", et)
+	log.Println("[INFO] Certificate", dom, "Expire After", days, "Days,", et)
 	ret.Status = "OK"
 	ret.ExpireAt = et
 	ret.ExpireDays = days
 	return ret
 }
 
-func (dc *CertificatesChecker) GetExpireTime(domain string) (time.Time, error) {
+func (dc *CertificatesChecker) GetExpireTime(domain string, cname string) (time.Time, error) {
 	var dialer net.Dialer
 	dialer.Timeout = 5 * time.Second
-	conn, err := tls.DialWithDialer(&dialer, "tcp", fmt.Sprintf("%s:443", domain), nil)
+	cfg := &tls.Config{
+		ServerName: domain,
+	}
+	conn, err := tls.DialWithDialer(&dialer, "tcp", fmt.Sprintf("%s:443", cname), cfg)
 	if err != nil {
 		return time.Time{}, err
 	}

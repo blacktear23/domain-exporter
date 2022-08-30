@@ -12,7 +12,7 @@ var (
 			Name: "domain_certificate_status",
 			Help: "Domain certificate status, 0 means error, 1 means OK.",
 		},
-		[]string{"domain"},
+		[]string{"domain", "cname"},
 	)
 
 	DomainCertificateExpireDays = prometheus.NewGaugeVec(
@@ -20,7 +20,7 @@ var (
 			Name: "domain_certificate_expire_days",
 			Help: "Domain certificate expire days.",
 		},
-		[]string{"domain"},
+		[]string{"domain", "cname"},
 	)
 
 	DomainWhoisStatus = prometheus.NewGaugeVec(
