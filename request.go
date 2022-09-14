@@ -183,7 +183,7 @@ func (rc *RequestChecker) RequestHttp(addr string, params *RequestParams) (bool,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
-		Timeout: 10 * time.Second,
+		Timeout: 15 * time.Second,
 	}
 	resp, err := client.Do(req)
 	if err != nil {
