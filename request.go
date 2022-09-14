@@ -93,7 +93,7 @@ func (rc *RequestChecker) CheckOneDomain(params *RequestParams) RequestResult {
 		ret.ErrorMsg = "Domain has no IP addresses"
 		return ret
 	}
-	addr := addrs[0]
+	addr := selectAddress(addrs)
 	ret.Address = addr
 	responseOk, statusCode, err := rc.doRequest(addr, params)
 	if err != nil {
@@ -104,6 +104,21 @@ func (rc *RequestChecker) CheckOneDomain(params *RequestParams) RequestResult {
 	}
 	ret.StatusCode = statusCode
 	return ret
+}
+
+func selectAddress(addrs []string) string {
+	for _, addr := range addrs {
+		ip := net.ParseIP(addr)
+		if ip == nil {
+			continue
+		}
+		if ip.To4() != nil {
+			// Return first IPv4 address
+			return addr
+		}
+	}
+	// No IPv4 Address just return first
+	return addrs[0]
 }
 
 func (rc *RequestChecker) doRequest(raddr string, params *RequestParams) (bool, int, error) {
